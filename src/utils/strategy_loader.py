@@ -11,7 +11,7 @@
 """
 import importlib
 from types import FunctionType
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Protocol
 
 
 def load_strategy_class(path: str) -> Any:
@@ -61,4 +61,58 @@ def function_to_class_adapter(func: Callable) -> Any:
     return FuncStrategy
 
 
-__all__ = ['load_strategy_class', 'function_to_class_adapter']
+class StrategyProtocol(Protocol):
+    """Минимальный контракт стратегии для BacktestEngine."""
+
+    allowed_min_bars: int
+
+    def find_entry_point(self, data_slice):  # pragma: no cover
+        ...
+
+
+def resolve_strategy_class(strategy_path: str) -> type:
+    """Возвращает класс стратегии по строковому пути.
+
+    - Если по пути лежит класс — возвращает его.
+    - Если по пути лежит функция/callable — возвращает класс-адаптер.
+    """
+    obj = load_strategy_class(strategy_path)
+    if not isinstance(obj, type) and callable(obj):
+        return function_to_class_adapter(obj)
+    if isinstance(obj, type):
+        return obj
+    raise TypeError(f"Loaded strategy object from '{strategy_path}' is not a class or callable")
+
+
+def ensure_find_entry_point(strategy: Any) -> Any:
+    """Гарантирует наличие метода find_entry_point у экземпляра стратегии.
+
+    Если у стратегии нет find_entry_point, но есть run(data, positions, trading_context),
+    привязывает совместимый wrapper. Иначе — бросает исключение.
+    """
+    if hasattr(strategy, 'find_entry_point'):
+        return strategy
+
+    if not hasattr(strategy, 'run'):
+        raise RuntimeError("Loaded strategy has neither find_entry_point nor run method")
+
+    import types
+
+    def _find_entry(self, data_slice):
+        try:
+            return self.run(data_slice, positions=[], trading_context=None)
+        except TypeError:
+            # возможно run ожидает только (data, positions)
+            return self.run(data_slice, [])
+
+    strategy.find_entry_point = types.MethodType(_find_entry, strategy)
+    return strategy
+
+
+__all__ = [
+    'load_strategy_class',
+    'function_to_class_adapter',
+    'resolve_strategy_class',
+    'ensure_find_entry_point',
+    'StrategyProtocol',
+]

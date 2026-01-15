@@ -103,54 +103,36 @@ class TestManager:
                 from src.backtester.engine.execution_engine import ExecutionEngine
                 from src.trading_engine.managers.position_manager import PositionManager
                 # загрузка стратегии динамически (path в configs STRATEGY_SETTINGS.PATH)
-                from src.utils.strategy_loader import load_strategy_class, function_to_class_adapter
-                import types
+                from src.utils.strategy_loader import (
+                    ensure_find_entry_point,
+                    resolve_strategy_class,
+                )
                 import numpy as np
 
                 strategy_path = self.settings_strategy.get("PATH")
                 if not strategy_path:
                     raise RuntimeError("Strategy path not configured in STRATEGY_SETTINGS.PATH")
 
-                StrategyObj = load_strategy_class(strategy_path)
-                # если функция — оборачиваем в класс-адаптер
-                if not isinstance(StrategyObj, type) and callable(StrategyObj):
-                    StrategyClass = function_to_class_adapter(StrategyObj)
-                else:
-                    StrategyClass = StrategyObj
+                StrategyClass = resolve_strategy_class(strategy_path)
+                strategy = ensure_find_entry_point(StrategyClass(coin))
 
-                # инстанцируем стратегию
-                strategy = StrategyClass(coin)
+                def _smoke_validate_strategy(_strategy, _data_htf: pd.DataFrame, _strategy_path: str) -> None:
+                    """Мини-валидация: даёт стратегии небольшой срез, чтобы упасть максимально рано."""
+                    try:
+                        data_cols = _data_htf[['open', 'high', 'low', 'close']].values
+                        timestamps = _data_htf.index.values
+                        n = min(len(data_cols), max(1, int(getattr(_strategy, 'allowed_min_bars', 1))))
+                        arr_small = np.empty((n, 5), dtype=object)
+                        arr_small[:, :4] = data_cols[:n]
+                        arr_small[:, 4] = pd.to_datetime(timestamps[:n])
+                        smoke_sig = _strategy.find_entry_point(arr_small)
+                        if smoke_sig is None or not (hasattr(smoke_sig, 'is_no_signal') or hasattr(smoke_sig, 'is_entry')):
+                            raise RuntimeError("Strategy smoke run returned unexpected result")
+                    except Exception as e:
+                        logger.exception(f"Strategy validation failed for {_strategy_path}: {e}")
+                        raise
 
-                # compatibility: если у стратегии нет find_entry_point, но есть run — привяжем адаптер
-                if not hasattr(strategy, 'find_entry_point'):
-                    if hasattr(strategy, 'run'):
-                        def _find_entry(self, data_slice):
-                            # run может ожидать data как np.array или pd.DataFrame
-                            try:
-                                return self.run(data_slice, positions=[], trading_context=None)
-                            except TypeError:
-                                return self.run(data_slice, [])
-
-                        strategy.find_entry_point = types.MethodType(_find_entry, strategy)
-                    else:
-                        raise RuntimeError(f"Loaded strategy {strategy_path} has neither find_entry_point nor run method")
-
-                # Простая валидация стратегии — smoke run на небольшом фрагменте данных
-                try:
-                    # подготовим массив похожий на тот, который используется в BacktestEngine
-                    data_cols = data_htf[['open','high','low','close']].values
-                    timestamps = data_htf.index.values
-                    n = min(len(data_cols), max(1, int(getattr(strategy, 'allowed_min_bars', 1))))
-                    arr_small = np.empty((n, 5), dtype=object)
-                    arr_small[:, :4] = data_cols[:n]
-                    arr_small[:, 4] = pd.to_datetime(timestamps[:n])
-                    # вызов
-                    smoke_sig = strategy.find_entry_point(arr_small)
-                    if smoke_sig is None or not (hasattr(smoke_sig, 'is_no_signal') or hasattr(smoke_sig, 'is_entry')):
-                        raise RuntimeError("Strategy smoke run returned unexpected result")
-                except Exception as e:
-                    logger.exception(f"Strategy validation failed for {strategy_path}: {e}")
-                    raise
+                _smoke_validate_strategy(strategy, data_htf, strategy_path)
                 # инициализация менеджера позиций
                 position_manager = PositionManager()
                 # инициализация движка исполнения

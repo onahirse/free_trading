@@ -2,7 +2,12 @@ import types
 
 import pytest
 
-from src.utils.strategy_loader import function_to_class_adapter, load_strategy_class
+from src.utils.strategy_loader import (
+    ensure_find_entry_point,
+    function_to_class_adapter,
+    load_strategy_class,
+    resolve_strategy_class,
+)
 
 
 def test_load_strategy_class_colon_path_loads_symbol():
@@ -58,3 +63,26 @@ def test_function_to_class_adapter_calls_wrapped_function_three_args_then_fallba
     assert out == ("X", [], None)
     assert calls["n"] == 1
     assert calls["args_len"] == 3
+
+
+def test_ensure_find_entry_point_adds_wrapper_when_only_run_present():
+    class S:
+        def run(self, data, positions=None, trading_context=None):
+            return ("ok", data)
+
+    s = ensure_find_entry_point(S())
+    assert hasattr(s, "find_entry_point")
+    assert s.find_entry_point(123) == ("ok", 123)
+
+
+def _data_only_func(data):
+    return {"data": data}
+
+
+def test_resolve_strategy_class_wraps_function():
+    StrategyClass = resolve_strategy_class(
+        "src.utils.tests.test_strategy_loader:_data_only_func"
+    )
+    assert isinstance(StrategyClass, type)
+    s = StrategyClass()
+    assert s.find_entry_point([1, 2, 3]) == {"data": [1, 2, 3]}
