@@ -28,7 +28,7 @@ RUN pip install --no-deps --no-index --find-links=/wheels -r requirements.txt
 
 WORKDIR /app
 # Клонируем репозиторий
-RUN git clone https://github.com/sandernet/algo_traid.git .
+RUN git clone https://github.com/onahirse/free_trading.git .
 
 # Создаём необходимые директории
 RUN mkdir -p DATA_OHLCV LOGS REPORTS
