@@ -1,0 +1,28 @@
+{# templates/report_all.html #}
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Full Multi-Coin Report</h2>
+
+{% for rep in reports %}
+    <hr>
+    <h2>Coin: {{ rep.coin }}</h2>
+
+    <h3>Settings</h3>
+    <table>
+        <tr><th>Strategy</th><td>{{ rep.settings.strategy }}</td></tr>
+        <tr><th>Timeframe</th><td>{{ rep.settings.timeframe }}</td></tr>
+        <tr><th>SL</th><td>{{ rep.settings.sl }}</td></tr>
+        <tr><th>TP</th><td>{{ rep.settings.tp }}</td></tr>
+        <tr><th>Max positions</th><td>{{ rep.settings.max_positions }}</td></tr>
+    </table>
+
+    {% include "blocks/stats.html" with stats=rep.stats %}
+
+    <h3>Positions</h3>
+    {% for pos in rep.positions %}
+        {% include "blocks/position.html" %}
+    {% endfor %}
+{% endfor %}
+
+{% endblock %}

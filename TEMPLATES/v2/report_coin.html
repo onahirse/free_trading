@@ -1,0 +1,20 @@
+{# templates/report_coin.html #}
+{% extends "v2/base.html" %}
+
+{% block content %}
+
+{% include "v2/blocks/header.html" %}
+
+<div class="coin-report">
+    {% include "v2/blocks/settings.html" %}
+
+    {% include "v2/blocks/metrics.html" %}
+
+    {% include "v2/blocks/position.html" %}
+    {#
+    {% include "v2/blocks/graphic.html" %}
+    #}
+</div>
+
+
+{% endblock %}

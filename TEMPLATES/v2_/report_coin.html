@@ -1,0 +1,24 @@
+{# templates/report_coin.html #}
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>Coin: {{ coin }}</h2>
+
+<h3>Settings</h3>
+<table>
+    <tr><th>Strategy</th><td>{{ settings.strategy }}</td></tr>
+    <tr><th>Timeframe</th><td>{{ settings.timeframe }}</td></tr>
+    <tr><th>Stop Loss</th><td>{{ settings.sl }}</td></tr>
+    <tr><th>Take Profit</th><td>{{ settings.tp }}</td></tr>
+    <tr><th>Max positions</th><td>{{ settings.max_positions }}</td></tr>
+</table>
+
+{% include "blocks/stats.html" %}
+
+<h2>Positions</h2>
+{% for pos in positions %}
+    {% include "blocks/position.html" %}
+{% endfor %}
+
+{% endblock %}

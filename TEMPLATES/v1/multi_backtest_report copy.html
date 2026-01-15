@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Strategy Report</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        .hidden { display: none; }
+        .btn { padding: 10px; margin: 5px; cursor: pointer; }
+        .btn.active { background-color: #007BFF; color: white; }
+    </style>
+</head>
+<body>
+    <h1>Отчет по торговым стратегиям</h1>
+
+    {% for coin, data in coins.items() %}
+        <h2>Монета: {{ coin }}</h2>
+        <p>Период тестирования: {{ data.summary.period_start }} - {{ data.summary.period_end }}</p>
+        <p>Средний профит: {{ data.summary.avg_profit }}</p>
+        <p>Средний винрейт: {{ data.summary.avg_winrate }}</p>
+
+        <div>
+            {% for tf, test in data.tests.items() %}
+                <button class="btn" onclick="showReport('{{ coin }}', '{{ tf }}')">{{ tf }}</button>
+            {% endfor %}
+        </div>
+
+        {% for tf, test in data.tests.items() %}
+            <div id="{{ coin }}-{{ tf }}" class="hidden">
+                <h3>Таймфрейм: {{ tf }}</h3>
+                <p>Период: {{ test.period_start }} - {{ test.period_end }}</p>
+                <p>Время выполнения: {{ test.exec_time }} сек</p>
+                <div>
+                    <h4>График прибыли и просадки</h4>
+                    {{ test.profit_chart|safe }}
+                </div>
+                <div>
+                    <h4>График ордеров</h4>
+                    {{ test.order_chart|safe }}
+                </div>
+                <div>
+                    <h4>Позиции</h4>
+                    <ul>
+                        {% for position in test.positions %}
+                            <li>
+                                Позиция {{ position.id }}: {{ position.status }}
+                                <ul>
+                                    {% for order in position.orders %}
+                                        <li>Ордер {{ order.id }}: {{ order.order_type }} ({{ order.status }})</li>
+                                    {% endfor %}
+                                </ul>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    <script>
+        function showReport(coin, tf) {
+            document.querySelectorAll('.hidden').forEach(el => el.style.display = 'none');
+            document.querySelector(`#${coin}-${tf}`).style.display = 'block';
+            document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

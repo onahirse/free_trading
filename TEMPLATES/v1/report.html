@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Отчёт по стратегиям{% endblock %}
+
+{% block content %}
+
+    {% for coin_name, coin_data in coins.items() %}
+
+        {% include "_coin_header.html" %}
+
+        {% for timeframe, test_data in coin_data.tests.items() %}
+
+            {% include "_timeframe_block.html" %}
+
+        {% endfor %}
+        </div>
+    {% endfor %}
+
+
+{% endblock %}

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Сводный Отчет по Торговым Стратегиям{% endblock %}</title>
+
+    {% block styles %}
+        <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; padding: 3px; background-color: #e4d1d1; }
+
+            .header-box {
+                background: #ffffff;
+                padding: 10px;
+                border-radius: 12px;
+                box-shadow: 0 2px 7px rgba(0,0,0,0.1);
+                margin-bottom: 10px;
+            }
+            .statistics {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                gap: 10px;
+            }
+            .stats-grid {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                gap: 10px;
+            }
+            /* Чтобы .stats-items не сжимался и занимал всё доступное пространство слева */
+            .stats-items {
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap; /* на случай, если элементов слишком много */
+            }
+
+            .stat-item {
+                background: #fff;
+                padding: 14px;
+                border-radius: 10px;
+                box-shadow: 0 1px 5px rgba(0,0,0,0.12);
+                text-align: center;
+                font-size: 14px;
+            }
+
+            .coin-report { background-color: #e0e0e0; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 5px; padding: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+            .coin-report h2 { color: #333; border-bottom: 2px solid #5cb85c; padding-bottom: 3px; margin-top: 0; }
+            .test-block { border: 1px solid #eee; border-radius: 6px; margin-top: 5px; overflow: hidden; }
+
+            .timeframe-header { background-color: #e9ecef; padding: 6px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 1.1em; }
+            
+            .test-details { padding: 20px; border-top: 1px solid #eee; background-color: #f8f9fa; }
+            .positive { color: #28a745; font-weight: bold; }
+            .negative { color: #dc3545; font-weight: bold; }
+            .toggle-icon { transition: transform 0.3s ease; }
+            .rotated { transform: rotate(180deg); }
+            
+            /* Таблица позиций */
+            /* ==== COLORS ==== */
+
+            /* PnL */
+            .profit-positive { color: #0a8a00; font-weight: bold; }
+            .profit-negative { color: #d60000; font-weight: bold; }
+
+            /* Position status colors */
+            .status-open { color: #0077cc; font-weight: bold; }
+            .status-closed { color: #009933; font-weight: bold; }
+            .status-cancelled { color: #777; font-weight: bold; }
+            .status-other { color: #d68400; font-weight: bold; }
+
+            /* Order status colors */
+            .order-filled { color: #009933; font-weight: bold; }
+            .order-cancelled { color: #d60000; font-weight: bold; }
+            .order-pending { color: #0077cc; font-weight: bold; }
+            .order-other { color: #444; font-weight: bold; }
+
+            /* Order type colors */
+            .order-entry { color: #60671d; font-weight: bold; }
+            .order-take_profit { color: #1e5929; font-weight: bold; }
+            .order-stop_loss { color: #933408; font-weight: bold; }
+
+
+            .dir-long {
+                color: #0b8f22; /* зелёный */
+                font-weight: bold;
+            }
+            .dir-short {
+                color: #c92a2a; /* красный */
+                font-weight: bold;
+            }
+
+            /* Tables */
+            .table{width:100%;border-collapse:collapse;margin-top:10px}
+            .table th,.table td{border:1px solid #ddd;padding:8px;text-align:left;vertical-align:top}
+            .table th{background:#f0f0f3}
+            .tp-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 6px;
+                border: 1px solid #ccc;       /* общий тонкий бордюр */
+                border-radius: 8px;
+            }
+
+            /* стили для ячеек вложенных таблиц */
+            .tp-table th, .tp-table td {
+                border: 1px solid #ccc;       /* тонкий бордюр для ячеек */
+                padding: 4px 6px;             /* уменьшенные отступы */
+                font-size: 0.85em;
+            }
+            .tp-table tbody tr:hover {
+                background-color: #e6f2ff;     /* светлый синий фон при наведении */
+            }
+            
+            .details-row{display:none;background:#fafafa}
+            .details-cell {
+                padding: 10px;
+                border-top: none;
+            }
+            tr:hover{background:#f5f5f5}
+
+            .toggle-btn {
+                cursor: pointer;
+                color: #0077cc;
+                font-weight: bold;
+                text-decoration: underline;
+            }
+            .button-group {
+                display: flex;
+                gap: 10px;
+            }
+            
+            .toggle-positions-btn { background-color: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer;}
+            .toggle-positions-btn:hover { background-color: #0056b3; }
+        </style>
+    {% endblock %}
+
+</head>
+
+<body>
+
+    {% block content %}{% endblock %}
+
+    {% block scripts %}
+        <script>
+
+            // подсветка числовых статов: добавляет классы profit-positive / profit-negative
+            (function colorizeStats() {
+                const nodes = document.querySelectorAll('[data-numeric]');
+                for (const n of nodes) {
+                    const text = n.textContent.trim().replace(/\u00A0/g, '');
+                    // пробуем извлечь число (можно быть отрицательным, с % и т.д.)
+                    const m = text.match(/-?\d+(\.\d+)?/);
+                    if (!m) continue;
+                    const val = parseFloat(m[0]);
+                    if (isNaN(val)) continue;
+                    if (val > 0) n.classList.add('profit-positive');
+                    else if (val < 0) n.classList.add('profit-negative');
+                    // при желании: форматирование, например n.textContent = val.toFixed(2)
+                }
+            })();
+
+            /**
+            * Функция для переключения видимости блоков (collapse/expand)
+            */
+
+            /**
+            * Переключает видимость элемента.
+            * 
+            * @param {string} id — ID элемента.
+            * @param {string} [displayType='block'] — Значение display при раскрытии.
+            
+            function toggleVisibility(id, displayType = 'block') {
+                const element = document.getElementById(id);
+                if (!element) return;
+                    const isVisible = window.getComputedStyle(element).display !== 'none';
+                element.style.display = isVisible ? 'none' : displayType;
+            }*/
+            function toggleVisibility(id, displayType, trigger) {
+                const element = document.getElementById(id);
+                if (!element) return;
+
+                // По умолчанию: для TR используем table-row, иначе block
+                const defaultDisplay = element.tagName === 'TR' ? 'table-row' : 'block';
+                const showDisplay = displayType || defaultDisplay;
+
+                const isVisible = window.getComputedStyle(element).display !== 'none';
+                element.style.display = isVisible ? 'none' : showDisplay;
+
+                if (trigger) {
+                    try {
+                        trigger.textContent = isVisible ? 'показать' : 'скрыть';
+                    } catch (e) { /* безопасно */ }
+                }
+            }
+        </script>
+    {% endblock %} 
+</body>
+</html>

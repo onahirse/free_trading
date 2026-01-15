@@ -1,0 +1,61 @@
+<div id="{{ test_id }}_positions"  class="header-box" style="display: none;">
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Symbol</th>
+            <th>Direction</th>
+            <th>Статус</th>
+            <th>Bar Opened</th>
+            <th>Bar Closed</th>
+            <th>Opened Vol</th>
+            <th>Closed Vol</th>
+            <th>Средняя цена</th>
+            <th>Прибыль</th>
+            <th>Ордеры</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+    {% for p in positions %}
+        {% set uid = "orders_" ~ p.id %}
+        {% set pstatus =
+            "status-closed" if p.status == "closed"
+            else "status-open" if p.status == "open"
+            else "status-cancelled" if p.status == "cancelled"
+            else "status-other"
+        %}
+
+        <tr>
+            <td>{{ p.id[:6] }}</td>
+            <td>{{ p.symbol }}</td>
+            <td class="{{ 'dir-long' if p.direction == 'LONG' else 'dir-short' }}">
+                {{ p.direction }}
+            </td>
+            <td class="{{ pstatus }}">{{ p.status }}</td>
+            <td>{{ p.bar_opened }}</td>
+            <td>{{ p.bar_closed }}</td>
+            <td>{{ p.opened_volume }}</td>
+            <td>{{ p.closed_volume }}</td>
+            <td>{{ p.avg_entry_price }}</td>
+
+            <td>
+                <span class="{% if p.profit > 0 %}profit-positive{% elif p.profit < 0 %}profit-negative{% endif %}">
+                    {{ "%.2f"|format(p.profit) }}
+                </span>
+            </td>
+            <td>
+                <span class="toggle-btn" onclick="toggleVisibility('{{ uid }}', 'table-row', this)">показать</span>
+            </td>
+        </tr>
+        <!-- ORDER LIST -->
+        <tr id="{{ uid }}" class="details-row">
+            <td colspan="11" class="details-cell">
+                {% include "v2/blocks/orders.html" %}
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>

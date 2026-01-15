@@ -1,0 +1,50 @@
+{% set unique_id = coin_name | replace('/', '_') | replace('.', '_') ~ '_' ~ timeframe %}
+{% set stats = test_data.test_stats %}
+{% set positions = test_data.positions %}
+
+<div class="test-block">
+    
+    <div class="header-box">
+        <div class="stats-grid">
+            <div class="stat-item" onclick="toggleBlock('{{ unique_id }}_positions')">
+            <strong>Таймфрейм:</strong><br>
+                <strong> **{{ timeframe }}** </strong>
+            </div>
+            <div class="stat-item">
+                <strong>Всего сделок:</strong><br>{{ stats.count_positions | default(0) }}
+            </div>
+            <div class="stat-item">
+                <strong>Общий PnL:</strong><br>
+                {% set pnl = stats.total_pnl | default(0) %}
+                <span class="{% if pnl > 0 %}profit-positive{% elif pnl < 0 %}profit-negative{% endif %}">
+                    {{ "%.2f"|format(pnl) }}
+                </span>
+            </div>
+            <div class="stat-item">
+                <strong>Процент прибыльных сделок:</strong><br>{{ "%.1f"|format(stats.winrate) }}%
+            </div>
+            <div class="stat-item">
+                <strong>Прибыльных/прибыль:</strong><br>{{ stats.wins }} / {{ "%.2f"|format(stats.total_win) }}
+            </div>
+            <div class="stat-item">
+                <strong>Убыточных/убыток:</strong><br>{{ stats.losses }} / {{ "%.2f"|format(stats.total_loss) }}
+            </div>
+            <div class="stat-item">
+                <button class="toggle-positions-btn" onclick="toggleVisibility('{{ unique_id }}_positions')">
+                    Все позиции ({{ stats.count_positions | default(0) }})
+                </button>
+            </div>
+            <div class="stat-item">
+                <button class="toggle-positions-btn" onclick="toggleVisibility('{{ unique_id }}_graphics')">
+                    Графики тестирования ({{ stats.count_positions | default(0) }})
+                </button>
+            </div>
+        </div>
+    </div>
+    <div id="{{ unique_id }}_positions" class="positions-table-container" style="display:none;">
+        {% include "_positions_table.html" %}
+    </div>
+    <div id="{{ unique_id }}_graphics" class="positions-table-container" style="display:none;">
+        {% include "_positions_graphic.html" %}
+    </div>
+</div>

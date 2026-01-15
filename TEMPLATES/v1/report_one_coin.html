@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Отчёт по стратегиям{% endblock %}
+
+{% set positions = positions %}
+{% set stats = stats %}
+{% set settings = settings %}
+{% set coin = coin %}
+
+{% block content %}
+
+    {% include "_coin_header.html" %}
+
+    {% for timeframe, test_data in coin_data.tests.items() %}
+
+        {% include "_timeframe_block.html" %}
+
+    {% endfor %}
+        </div>
+
+{% endblock %}

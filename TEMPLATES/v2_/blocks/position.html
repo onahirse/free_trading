@@ -1,0 +1,45 @@
+{# templates/blocks/position.html #}
+
+<div class="section">
+    <h3>Position #{{ pos.id }} ({{ pos.direction }}) — {{ pos.symbol }}</h3>
+
+    <table>
+        <tr><th>ID</th><td>{{ pos.id }}</td></tr>
+        <tr><th>Status</th><td>{{ pos.status }}</td></tr>
+        <tr><th>Opened bar</th><td>{{ pos.bar_opened }}</td></tr>
+        <tr><th>Closed bar</th><td>{{ pos.bar_closed }}</td></tr>
+        <tr><th>Avg entry price</th><td>{{ pos.avg_entry_price }}</td></tr>
+        <tr><th>Opened volume</th><td>{{ pos.opened_volume }}</td></tr>
+        <tr><th>Closed volume</th><td>{{ pos.closed_volume }}</td></tr>
+        <tr>
+            <th>Profit</th>
+            <td class="{{ 'profit-positive' if (pos.profit or 0) >= 0 else 'profit-negative' }}">
+                {{ pos.profit }}
+            </td>
+        </tr>
+        <tr><th>Meta</th><td>{{ pos.meta }}</td></tr>
+    </table>
+
+    <h4>Orders</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Type</th>
+                <th>Direction</th>
+                <th>Status</th>
+                <th>Price</th>
+                <th>Volume</th>
+                <th>Profit</th>
+                <th>Created bar</th>
+                <th>Close bar</th>
+                <th>Meta</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in pos.orders %}
+                {% include "blocks/order.html" %}
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

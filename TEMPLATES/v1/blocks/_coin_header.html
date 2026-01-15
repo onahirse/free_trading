@@ -1,0 +1,39 @@
+{# 
+    Выводит информацию по одной монете.
+    Общая информация по монете (название, период тестирования, стартовый депозит, настройки риск менеджмент, SPOT или FUTURES).
+#}
+
+<div class="coin-report">
+    <div class="header-box">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <h2>{{ coin_name }}</h2>
+            </div>
+            <div class="stat-item">
+                <strong>Период тестирования:</strong> 
+                {{ settings.period_start | default('N/A') }} - {{ settings.period_end | default('N/A') }}
+            </div>
+
+            <div class="stat-item">
+                <strong>total_pnl:</strong> 
+                {{ "%.2f"|format(stats.total_pnl) }}
+            </div>
+            {#<div class="stat-item">
+                <strong>start_deposit_usdt:</strong> 
+                {{ "%.2f"|format(stats.start_deposit_usdt) }}
+            </div>
+            <div class="stat-item">
+                <strong>market_type:</strong> 
+                {{ "%.2f"|format(summary.market_type) }}
+            </div>
+            <div class="stat-item">
+                <strong>leverage:</strong> 
+                {{ "%.2f"|format(summary.leverage) }}
+            </div>
+            <div class="stat-item">
+                <strong>volume_size:</strong> 
+                {{ "%.2f"|format(summary.volume_size) }}
+            </div> #}
+        </div> 
+    </div>
+

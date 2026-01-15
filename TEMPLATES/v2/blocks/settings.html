@@ -1,0 +1,16 @@
+{# templates/blocks/stats.html #}
+<div class="header-box">
+    <h2>Settings</h2>
+    <div class="stats-grid">
+        <div class="stats-items">
+        <div class="stat-item">
+            <strong>Период тестирования:</strong> 
+            {{ settings.START_DATE | default('N/A') }} - {{ settings.END_DATE | default('N/A') }}
+        </div>
+        <div class="stat-item">
+            <strong>MAX_WORKERS:</strong> 
+            {{ settings.MAX_WORKERS }}
+        </div>
+    </div>
+    </div> 
+</div>

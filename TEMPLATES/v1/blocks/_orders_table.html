@@ -1,0 +1,52 @@
+{% if p.orders and p.orders|length > 0 %}
+    <table class="tp-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Тип</th>
+                <th>Статус</th>
+                <th>Цена</th>
+                <th>Объем</th>
+                <th>Исполнено</th>
+                <th>Прибыль</th>
+                <th>Created Bar</th>
+                <th>Close Bar</th>
+                <th>Meta</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for o in p.orders %}
+            {% set ostatus =
+                "order-filled" if o.status == "FILLED"
+                else "order-cancelled" if o.status == "CANCELLED"
+                else "order-pending" if o.status == "PARTIAL"
+                else "order-other"
+            %}
+
+            {% set otype =
+                "order-entry" if o.order_type == "ENTRY"
+                else "order-take_profit" if o.order_type == "TAKE_PROFIT"
+                else "order-stop_loss" if o.order_type == "STOP_LOSS"
+            %}
+            <tr>
+                <td>{{ o.id[:6] }}</td>
+                <td class="{{ otype }}">{{ o.order_type }}</td>
+                <td class="{{ ostatus }}"">{{ o.status }}</td>
+                <td>{{ o.price }}</td>
+                <td>{{ o.volume }}</td>
+                <td>{{ o.filled }}</td>
+                <td>
+                    <span class="{% if o.profit is not none and o.profit > 0 %}profit-positive{% elif o.profit is not none and o.profit < 0 %}profit-negative{% endif %}">
+                        {{ "%.2f"|format(o.profit) if o.profit is not none else '—'  }}
+                    </span>
+                </td>
+                <td>{{ o.created_bar }}</td>
+                <td>{{ o.close_bar }}</td>
+                <td>{{ o.meta }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <em>Нет ордеров</em>
+{% endif %}

@@ -1,0 +1,35 @@
+# Environment files (keep real .env out of repo; include .env.example in repo)
+/.env
+**/.env
+.env.local
+.env.*.local
+
+!.env.example
+
+/configs/*
+!/configs/
+!/configs/*.example
+
+# Data, reports and logs
+/DATA_OHLCV/
+/REPORTS/
+/LOGS/
+
+
+/.venv
+/venv
+
+# Python cache files
+**/__pycache__
+*.pyc
+
+.vscode/
+
+# Ignore specific file types
+*.log
+*.xlsx
+*.md
+help.txt
+# Но не игнорировать
+!README.md
+

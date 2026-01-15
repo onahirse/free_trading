@@ -1,0 +1,182 @@
+# ----------------------------------------------------------------------
+# config.yml
+# Настройки конфигурации для торгового бота ZigZag-Fibonacci
+# ----------------------------------------------------------------------
+
+# =====================================================================
+# Настройки торговых монет (SYMBOLS)
+# =====================================================================
+COINS:
+  # - SYMBOL: BTC
+  #   TIMEFRAME: "4h"
+  #   MIN_TIMEFRAME: "1"
+  #   MARKET_TYPE: "spot" # spot, linear, inverse spot по умолчанию
+  #   AUTO_TRADING: true
+  #   START_DEPOSIT_USDT: 1000
+  #   MINIMAL_TICK_SIZE: 0.01 # Минимальный размер шага цены
+  #   LEVERAGE: 5  # Плечо
+  #   # Размер ордера (в usdt )
+  #   VOLUME_SIZE  : 1000
+
+  - SYMBOL: ETH
+    TIMEFRAME: "D"
+    MIN_TIMEFRAME: "1" # Для проверки ордеров на исполнение. если не нужно осатавлять, пустая строка ""
+    MARKET_TYPE: "spot" # spot, linear, inverse
+    AUTO_TRADING: true
+    START_DEPOSIT_USDT: 1000 #usdt
+    MINIMAL_TICK_SIZE: 0.01 # Минимальный размер шага цены
+    LEVERAGE: 2  # Плечо
+    # Размер ордера (в usdt )
+    VOLUME_SIZE  : 1000
+
+  # - SYMBOL: SOL
+  #   TIMEFRAME: "4h"
+  #   MIN_TIMEFRAME: "1"
+  #   MARKET_TYPE: "linear" # spot, linear, inverse
+  #   AUTO_TRADING: true
+  #   START_DEPOSIT_USDT: 1000
+  #   MINIMAL_TICK_SIZE: 0.01 # Минимальный размер шага цены
+  #   LEVERAGE: 5  # Плечо
+  #   # Размер ордера (в usdt )
+  #   VOLUME_SIZE  : 1000
+
+  # - SYMBOL: BNB
+  #   TIMEFRAME: "4h"
+  #   MIN_TIMEFRAME: "1"
+  #   MARKET_TYPE: "linear" # spot, linear, inverse
+  #   AUTO_TRADING: true
+  #   START_DEPOSIT_USDT: 1000
+  #   MINIMAL_TICK_SIZE: 0.01 # Минимальный размер шага цены
+  #   LEVERAGE: 5  # Плечо
+  #   # Размер ордера (в usdt )
+  #   VOLUME_SIZE  : 1000 
+
+  # - SYMBOL: CFX
+  #   TIMEFRAME: "4h"
+  #   MIN_TIMEFRAME: "1" # Для проверки ордеров на исполнение. если не нужно осатавлять, пустая строка ""
+  #   MARKET_TYPE: "linear" # spot, linear, inverse
+  #   AUTO_TRADING: true
+  #   START_DEPOSIT_USDT: 1000
+  #   MINIMAL_TICK_SIZE: 0.00001 # Минимальный размер шага цены
+  #   LEVERAGE: 5  # Плечо
+  #   # Размер ордера (в usdt )
+  #   VOLUME_SIZE  : 1000
+  
+
+  
+# ======================================================================
+# СЕКЦИЯ БИРЖИ (EXCHANGE_SETTINGS)
+# ======================================================================
+EXCHANGE_SETTINGS: 
+# Используемая биржа (например, binance, bybit, kucoin)
+  EXCHANGE_ID: bybit
+  API_KEY: "" 
+  API_SECRET: ""
+  CATEGORY: "linear"
+  LIMIT: 1000
+  TESTNET: false
+  DEMO: true
+
+# ======================================================================
+# СЕКЦИЯ СТРАТЕГИИ (STRATEGY_SETTINGS)
+# ======================================================================
+STRATEGY_SETTINGS:
+  STRATEGY_NAME: "zigzag_fibo" # имя стратегии для запуска нескольких стратегий
+  MINIMUM_BARS_FOR_STRATEGY_CALCULATION: 100
+  Z2_INDEX_OFFSET: 3
+  # MINIMAL_BARS_COUNT: 100 # Минимальное количество баров для расчета индикаторов
+  # Параметр отклонения ZigZag
+  ZIGZAG_DEPTH: 12
+  ZIGZAG_DEVIATION: 5
+  ZIGZAG_BACKTEP: 2
+  # Коэффициенты Фибоначчи для размещения ордеров (ретрейсмент)
+  FIBONACCI_LEVELS:
+    - level: 0.236
+      volume: 0.2  # Уровень 5 тейк
+      TP: True
+    - level: 0.382
+      volume: 0.2  # Уровень 4 тейк
+      TP: True
+    - level: 0.500
+      volume: 0.2  # Уровень 3 тейк
+      TP: True
+    - level: 0.618
+      volume: 0.2  # Уровень 2 тейк
+      TP: True
+    - level: 0.786
+      volume: 0.2  # Уровень 1 тейк
+      TP: True
+      TP_TO_BREAK: True
+
+    - level: 1.0
+      volume: 0  # Уровень 1
+    - level: 1.272
+      volume: 0  # Уровень 2
+    - level: 1.414
+      volume: 1  # Уровень 3 stop
+      SL: True
+    - level: 1.618
+      volume: 0  # Уровень 3 stop
+    - level: 2.000
+      volume: 0  # Уровень 4
+
+# ======================================================================
+# СЕКЦИЯ РИСК-МЕНЕДЖМЕНТА (RISK_SETTINGS)
+# ======================================================================
+RISK_SETTINGS:
+  # Общий Stop Loss на сделку (в процентах от входа)
+  STOP_LOSS_PERCENT: 0.015
+  # Общий Take Profit на сделку (в процентах от входа)
+  TAKE_PROFIT_PERCENT: 0.03
+  # Максимальное количество открытых позиций одновременно
+  MAX_POSITIONS: 3
+
+# ======================================================================
+# СЕКЦИЯ ХЕДЖИРОВАНИЯ (ALS_SETTINGS)
+# ======================================================================
+ALS_SETTINGS:
+  ENABLED: true
+  HEDGING_RATIO: 0.5
+  SIGNAL_THRESHOLD: 0.7
+  MAX_HEDGING_POSITIONS: 2
+
+
+# ======================================================================
+# СЕКЦИЯ ТЕСТИРОВАНИЯ/РАБОТЫ (BACKTEST_SETTINGS)
+# ======================================================================
+BACKTEST_SETTINGS:
+  # Директория для хранения исторических данных
+  # TIMEFRAME_LIST: ["30","60", "4h", "D"]
+  TIMEFRAME_LIST: ["D"]
+  DATA_DIR: DATA_OHLCV/
+  REPORT_DIRECTORY: REPORTS/
+  TEMPLATE_DIRECTORY: templates/
+  FULL_DATAFILE: False # Если True, то бэктест будет использовать полный исторический диапазон
+  # начальная ДАТА для бэктеста
+  START_DATE: "2025-05-01"
+  # конечная ДАТА для бэктеста    
+  END_DATE: "2025-12-31" 
+  MAX_WORKERS: 16
+
+# ======================================================================
+# СЕКЦИЯ ЛОГИРОВАНИЯ (LOGGING_SETTINGS)
+# ======================================================================
+LOGGING_SETTINGS:
+  # Уровень логирования: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  LEVEL: INFO
+  # Директория для хранения логов
+  LOG_DIR: LOGS
+  # Имя основного файла логов
+  FILENAME: logs.log
+  # Максимальный размер файла логов перед ротацией (в байтах: 10МБ = 10485760)
+  MAX_BYTES: 10485760
+  # Количество хранимых резервных файлов логов
+  BACKUP_COUNT: 5
+
+# ======================================================================
+# СЕКЦИЯ ПЛАНИРОВЩИКА (SCHEDULER_SETTINGS)
+# ======================================================================
+SCHEDULER_SETTINGS:
+  # Включить/выключить планировщик
+  ENABLED: true
+  TIMEZONE: "UTC"

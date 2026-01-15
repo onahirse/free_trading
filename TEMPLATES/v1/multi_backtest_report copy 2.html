@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Сводный Отчет по Торговым Стратегиям</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; padding: 10px; background-color: #f4f7f9; }
+
+        .header-box {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 7px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+        }
+        .stats-grid {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stat-item {
+            background: #fff;
+            padding: 14px;
+            border-radius: 10px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.12);
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .coin-report { background-color: #fff; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; padding: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .coin-report h2 { color: #333; border-bottom: 2px solid #5cb85c; padding-bottom: 10px; margin-top: 0; }
+        .test-block { border: 1px solid #eee; border-radius: 6px; margin-top: 15px; overflow: hidden; }
+
+        .timeframe-header { background-color: #e9ecef; padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 1.1em; }
+        
+        .test-details { padding: 20px; border-top: 1px solid #eee; background-color: #f8f9fa; }
+        .positive { color: #28a745; font-weight: bold; }
+        .negative { color: #dc3545; font-weight: bold; }
+        .toggle-icon { transition: transform 0.3s ease; }
+        .rotated { transform: rotate(180deg); }
+        
+        /* Таблица позиций */
+        /* ==== COLORS ==== */
+
+        /* PnL */
+        .profit-positive { color: #0a8a00; font-weight: bold; }
+        .profit-negative { color: #d60000; font-weight: bold; }
+
+        /* Position status colors */
+        .status-open { color: #0077cc; font-weight: bold; }
+        .status-closed { color: #009933; font-weight: bold; }
+        .status-cancelled { color: #777; font-weight: bold; }
+        .status-other { color: #d68400; font-weight: bold; }
+
+        /* Order status colors */
+        .order-filled { color: #009933; font-weight: bold; }
+        .order-cancelled { color: #d60000; font-weight: bold; }
+        .order-pending { color: #0077cc; font-weight: bold; }
+        .order-other { color: #444; font-weight: bold; }
+
+        /* Order type colors */
+        .order-entry { color: #60671d; font-weight: bold; }
+        .order-take_profit { color: #1e5929; font-weight: bold; }
+        .order-stop_loss { color: #933408; font-weight: bold; }
+
+
+        .dir-long {
+            color: #0b8f22; /* зелёный */
+            font-weight: bold;
+        }
+        .dir-short {
+            color: #c92a2a; /* красный */
+            font-weight: bold;
+        }
+
+        /* Tables */
+        .table{width:100%;border-collapse:collapse;margin-top:10px}
+        .table th,.table td{border:1px solid #ddd;padding:8px;text-align:left;vertical-align:top}
+        .table th{background:#f0f0f3}
+        .tp-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 6px;
+            border: 1px solid #ccc;       /* общий тонкий бордюр */
+            border-radius: 6px;
+        }
+
+        /* стили для ячеек вложенных таблиц */
+        .tp-table th, .tp-table td {
+            border: 1px solid #ccc;       /* тонкий бордюр для ячеек */
+            padding: 4px 6px;             /* уменьшенные отступы */
+            font-size: 0.85em;
+        }
+        .tp-table tbody tr:hover {
+            background-color: #e6f2ff;     /* светлый синий фон при наведении */
+        }
+        
+        .details-row{display:none;background:#fafafa}
+        .details-cell {
+            padding: 10px;
+            border-top: none;
+        }
+        tr:hover{background:#f5f5f5}
+
+        .toggle-btn {
+            cursor: pointer;
+            color: #0077cc;
+            font-weight: bold;
+            text-decoration: underline;
+        }
+        
+        .toggle-positions-btn { background-color: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; margin-top: 15px; }
+        .toggle-positions-btn:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+    {% for coin_name, coin_data in coins.items() %}
+    <div class="coin-report">
+        <div class="header-box">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <h2>{{ coin_name }}</h2>
+                </div>
+            <div class="stat-item">
+                <strong>Период тестирования:</strong> 
+                {{ coin_data.summary.period_start | default('N/A') }} - {{ coin_data.summary.period_end | default('N/A') }}
+            </div>
+            <div class="stat-item">
+                <strong>total_pnl:</strong> 
+                {{ "%.2f"|format(coin_data.summary.total_pnl) }}
+            </div>
+            <div class="stat-item">
+                <strong>start_deposit_usdt:</strong> 
+                {{ "%.2f"|format(coin_data.summary.start_deposit_usdt) }}
+            </div>
+            {# <div class="stat-item">
+                <strong>market_type:</strong> 
+                {{ "%.2f"|format(summary.market_type) }}
+            </div>
+            <div class="stat-item">
+                <strong>leverage:</strong> 
+                {{ "%.2f"|format(summary.leverage) }}
+            </div>
+            <div class="stat-item">
+                <strong>volume_size:</strong> 
+                {{ "%.2f"|format(summary.volume_size) }}
+            </div> #}
+        </div> 
+        
+        {% for timeframe, test_data in coin_data.tests.items() %}
+
+            {% set unique_id = coin_name | replace('/', '_') | replace('.', '_') ~ '_' ~ timeframe %}
+            {% set stats = test_data.test_stats %}
+            {% set positions = test_data.positions %}
+
+            <div class="test-block">
+                
+                <div class="header-box">
+                    <div class="stats-grid">
+                        <div class="stat-item" onclick="toggleBlock('{{ unique_id }}')">
+                        <strong>Таймфрейм:</strong><br>
+                            <strong> **{{ timeframe }}** </strong>
+
+                        </div>
+                        <div class="stat-item">
+                            <strong>Всего сделок:</strong><br>{{ stats.count_positions | default(0) }}
+                        </div>
+
+                        <div class="stat-item">
+                            <strong>Общий PnL:</strong><br>
+                            {% set pnl = stats.total_pnl | default(0) %}
+                            <span class="{% if pnl > 0 %}profit-positive{% elif pnl < 0 %}profit-negative{% endif %}">
+                                {{ "%.2f"|format(pnl) }}
+                            </span>
+                        </div>
+
+                        <div class="stat-item">
+                            <strong>Процент прибыльных сделок:</strong><br>{{ "%.1f"|format(stats.winrate) }}%
+                        </div>
+
+                        <div class="stat-item">
+                            <strong>Прибыльных/прибыль:</strong><br>{{ stats.wins }} / {{ "%.2f"|format(stats.total_win) }}
+                        </div>
+
+                        <div class="stat-item">
+                            <strong>Убыточных/убыток:</strong><br>{{ stats.losses }} / {{ "%.2f"|format(stats.total_loss) }}
+                        </div>
+                        <div class="stat-item">
+                            <button class="toggle-positions-btn" onclick="toggleBlock('{{ unique_id }}_positions')">
+                                Все позиции ({{ stats.count_positions | default(0) }})
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+
+                    
+                <div id="{{ unique_id }}_positions" class="positions-table-container" style="display:none;">
+                    <h2>Список позиций</h2>
+
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Symbol</th>
+                                <th>Direction</th>
+                                <th>Статус</th>
+                                <th>Bar Opened</th>
+                                <th>Bar Closed</th>
+                                <th>Opened Vol</th>
+                                <th>Closed Vol</th>
+                                <th>Средняя цена</th>
+                                <th>Прибыль</th>
+                                <th>Ордеры</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                        {% for p in positions %}
+                            {% set uid = "orders_" ~ p.id %}
+                            {% set pstatus =
+                                "status-closed" if p.status == "closed"
+                                else "status-open" if p.status == "open"
+                                else "status-cancelled" if p.status == "cancelled"
+                                else "status-other"
+                            %}
+
+                            <tr>
+                                <td>{{ p.id[:6] }}</td>
+                                <td>{{ p.symbol }}</td>
+                                <td class="{{ 'dir-long' if p.direction == 'LONG' else 'dir-short' }}">
+                                    {{ p.direction }}
+                                </td>
+                                <td class="{{ pstatus }}">{{ p.status }}</td>
+                                <td>{{ p.bar_opened }}</td>
+                                <td>{{ p.bar_closed }}</td>
+                                <td>{{ p.opened_volume }}</td>
+                                <td>{{ p.closed_volume }}</td>
+                                <td>{{ p.avg_entry_price }}</td>
+
+                                <td>
+                                    <span class="{% if p.profit > 0 %}profit-positive{% elif p.profit < 0 %}profit-negative{% endif %}">
+                                        {{ "%.2f"|format(p.profit) }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    
+                                    <span class="toggle-btn" onclick="toggleDetails('{{ uid }}')">показать</span>
+                                </td>
+                            </tr>
+
+                            <!-- ORDER LIST -->
+                            <tr id="{{ uid }}" class="details-row">
+                                <td colspan="11" class="details-cell">
+                                    {% if p.orders and p.orders|length > 0 %}
+                                        <table class="tp-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>ID</th>
+                                                    <th>Тип</th>
+                                                    <th>Статус</th>
+                                                    <th>Цена</th>
+                                                    <th>Объем</th>
+                                                    <th>Исполнено</th>
+                                                    <th>Прибыль</th>
+                                                    <th>Created Bar</th>
+                                                    <th>Close Bar</th>
+                                                    <th>Meta</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            {% for o in p.orders %}
+                                                {% set ostatus =
+                                                    "order-filled" if o.status == "FILLED"
+                                                    else "order-cancelled" if o.status == "CANCELLED"
+                                                    else "order-pending" if o.status == "PARTIAL"
+                                                    else "order-other"
+                                                %}
+
+                                                {% set otype =
+                                                    "order-entry" if o.order_type == "ENTRY"
+                                                    else "order-take_profit" if o.order_type == "TAKE_PROFIT"
+                                                    else "order-stop_loss" if o.order_type == "STOP_LOSS"
+                                                %}
+                                                <tr>
+                                                    <td>{{ o.id[:6] }}</td>
+                                                    <td class="{{ otype }}">{{ o.order_type }}</td>
+                                                    <td class="{{ ostatus }}"">{{ o.status }}</td>
+                                                    <td>{{ o.price }}</td>
+                                                    <td>{{ o.volume }}</td>
+                                                    <td>{{ o.filled }}</td>
+                                                    <td>
+                                                        <span class="{% if o.profit is not none and o.profit > 0 %}profit-positive{% elif o.profit is not none and o.profit < 0 %}profit-negative{% endif %}">
+                                                            {{ "%.2f"|format(o.profit) if o.profit is not none else '—'  }}
+                                                        </span>
+                                                    </td>
+                                                    <td>{{ o.created_bar }}</td>
+                                                    <td>{{ o.close_bar }}</td>
+                                                    <td>{{ o.meta }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    {% else %}
+                                        <em>Нет ордеров</em>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endfor %}
+        
+    </div>
+    {% endfor %}
+
+    <script>
+        /**
+         * Функция для переключения видимости блоков (collapse/expand)
+         */
+        function toggleBlock(id) {
+            var block = document.getElementById(id);
+            var icon = document.getElementById('icon-' + id);
+            
+            if (block.style.display === "none" || block.style.display === "") {
+                block.style.display = "block";
+                if (icon) {
+                    icon.classList.add('rotated');
+                }
+            } else {
+                block.style.display = "none";
+                if (icon) {
+                    icon.classList.remove('rotated');
+                }
+            }
+        }
+        function toggleDetails(id) {
+            const block = document.getElementById(id);
+            if(block.style.display === 'none' || block.style.display === ''){
+                block.style.display = 'table-row';
+            } else {
+                block.style.display = 'none';
+            }
+        }  
+    </script>
+
+</body>
+</html>

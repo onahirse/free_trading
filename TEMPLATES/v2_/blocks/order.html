@@ -1,0 +1,13 @@
+{# templates/blocks/order.html #}
+<tr>
+    <td>{{ order.id }}</td>
+    <td>{{ order.order_type }}</td>
+    <td>{{ order.direction }}</td>
+    <td>{{ order.status }}</td>
+    <td>{{ order.price }}</td>
+    <td>{{ order.volume }}</td>
+    <td class="{{ 'profit-positive' if (order.profit or 0) >= 0 else 'profit-negative' }}">{{ order.profit }}</td>
+    <td>{{ order.created_bar }}</td>
+    <td>{{ order.close_bar or "-" }}</td>
+    <td>{{ order.meta }}</td>
+</tr>

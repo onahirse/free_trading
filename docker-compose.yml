@@ -1,0 +1,16 @@
+version: '3.9'
+
+services:
+  trading_bot:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: trading_bot
+    volumes:
+      - ./data:/app/DATA_OHLCV
+      - ./configs:/app/configs
+      - ./logs:/app/LOGS
+      - ./reports:/app/REPORTS
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: python app.py --ldata

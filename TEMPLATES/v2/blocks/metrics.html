@@ -1,0 +1,74 @@
+{# templates/blocks/stats.html #}
+<div class="header-box">
+
+    <h2>{{ symbol }} / {{ timeframe }} - Statistics</h2>
+<div class="statistics">
+    <div class="stats-grid">
+        <div class="stats-items">
+            <div class="stat-item">
+                <strong>Начальный депозит:</strong></br>
+                <span data-numeric>{{ coin.START_DEPOSIT_USDT }}</span>
+            </div>
+            <div class="stat-item">
+                <strong>Минимальное движение цены :</strong></br>
+                <span data-numeric>{{ coin.MINIMAL_TICK_SIZE }}</span>
+            </div>
+            <div class="stat-item">
+                <strong>Плечо:</strong></br> 
+                <span data-numeric>{{ coin.LEVERAGE }}</span>
+            </div>
+            <div class="stat-item">
+                <strong>MARKET_TYPE:</strong> 
+                {{ coin.MARKET_TYPE }}
+            </div>
+        </div> 
+    </div> 
+
+    <div class="stats-grid">
+        <div class="stats-items">
+            <div class="stat-item">
+                <strong>Total positions:</strong></br>
+                <span data-numeric>{{ metrics.count }}</span>
+            </div>
+            <div class="stat-item">
+                <strong>total_pnl:</strong> </br>
+                <span data-numeric>{{ "%.2f"|format(metrics.total_pnl) }}</span>
+            </div>
+            <div class="stat-item">
+                <strong>Wins:</strong></br> 
+                <span data-numeric>{{ "%.2f"|format(metrics.wins) }}</span>
+            </div>
+            <div class="stat-item">
+                <strong>Losses:</strong></br> 
+                <span data-numeric>{{ "%.2f"|format(metrics.losses) }}</span>
+            </div>
+            <div class="stat-item">
+                <strong>Winrate (%):</strong></br> 
+                <span data-numeric>{{ "%.2f"|format(metrics.winrate) }}</span>
+            </div>
+            <div class="stat-item">
+                <strong>Total win:</strong></br> 
+                <span data-numeric>{{ "%.2f"|format(metrics.total_win) }}</span>
+            </div>
+            <div class="stat-item">
+                <strong>Total loss:</strong></br> 
+                <span data-numeric>{{ "%.2f"|format(metrics.total_loss) }}</span>
+            </div>
+        </div>
+        <div class="button-group">
+            <button 
+                class="toggle-positions-btn" 
+                onclick="toggleVisibility('{{ test_id }}_positions')">
+                    Все позиции ({{ metrics.count | default(0) }})
+            </button>
+            <button 
+                class="toggle-positions-btn" 
+                onclick="toggleVisibility('{{ test_id }}_graphics')"
+                >
+                Графики ({{ metrics.count | default(0) }})
+            </button>
+        </div>
+    </div> 
+</div> 
+</div>
+

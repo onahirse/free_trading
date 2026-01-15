@@ -1,0 +1,37 @@
+{# templates/report_all.html #}
+{% extends "v2/base.html" %}
+
+{% block content %}
+
+{% include "v2/blocks/header.html" %}
+
+{% include "v2/blocks/settings.html" %}
+
+{% for symbol, entries in coins.items() %}
+
+    {% for entry in entries %}
+        {% set coin = entry.coin %}
+        {% set timeframe = entry.timeframe %}
+        {% set metrics = entry.metrics %}
+        <div class="coin-report">
+
+            {% include "v2/blocks/metrics.html" %}
+            {#{% if positions %}
+                {% include "v2/blocks/position.html" %}
+            {% endif %}
+
+            {% include "v2/blocks/graphic.html" %}
+            #}
+        </div>
+    {% endfor %}
+{% endfor %}
+
+{% endblock %}
+
+
+
+
+
+
+
+
