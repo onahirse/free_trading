@@ -94,18 +94,27 @@ class DataFetcher:
         linear: BTC/USDT:USDT
         inverse: BTC/USD
         """
-                # markets = self.exchange.markets
-        # Дополнительная проверка для Bybit и других бирж
-        if self.exchange_id.lower() == "bybit":
-            if self.market_type == "linear":
-                return f"{self.base}/USDT:USDT"
-            elif self.market_type == "inverse":
-                return f"{self.base}/USD"
-            elif self.market_type == "spot":
+        # Определяем формат символа по типу рынка.
+        # Для spot: <BASE>/USDT
+        # Для linear (контракты, требующие постфикса): Bybit использует формат <BASE>/USDT:USDT
+        # Для inverse: используем USD
+        try:
+            mt = (self.market_type or "").lower()
+            if mt == "spot":
                 return f"{self.base}/USDT"
 
-        logger.error(f"Ошибка при определении формата символа для {self.base} на {self.exchange_id}.")
-        return self.base  # По умолчанию возвращаем как есть
+            if self.exchange_id.lower() == "bybit":
+                if mt == "linear":
+                    return f"{self.base}/USDT:USDT"
+                if mt == "inverse":
+                    return f"{self.base}/USD"
+
+            # Если не распознано — возвращаем базовый формат с /USDT как безопасный дефолт
+            return f"{self.base}/USDT"
+        except Exception:
+            # В редких случаях вернём просто базовый символ
+            logger.warning(f"Не удалось определить формат символа для {self.base} на {self.exchange_id}, используем базовый формат.")
+            return self.base
     
     # -------------------------------------------------------------
     # ВСПОМОГАТЕЛЬНЫЙ МЕТОД: Формирование пути для экспорта и импорта файлов
@@ -141,9 +150,15 @@ class DataFetcher:
         Конвертирует дату YYYY-MM-DD в Unix-таймштамп в миллисекундах (UTC).
         Для конечной даты (is_end_date=True) устанавливает время на конец дня (23:59:59.999).
         """
+        # Требуем строгий формат YYYY-MM-DD для предсказуемости
+        import re
+        if not isinstance(date_str, str) or not re.match(r"^\d{4}-\d{2}-\d{2}$", date_str):
+            logger.error(f"Неверный формат даты: {date_str}. Ожидается 'YYYY-MM-DD'.")
+            raise ValueError(f"Неверный формат даты: {date_str}. Ожидается 'YYYY-MM-DD'.")
+
         try:
-            # Используем pandas Timestamp и value (наносекунды от эпохи) для стабильно
-            # воспроизводимого результата в миллисекундах (UTC).
+            # Используем pandas Timestamp и value (наносекунды от эпохи) для стабильного
+            # результата в миллисекундах (UTC).
             ts = pd.Timestamp(date_str)
             # Локализуем в UTC, если нет информации о TZ
             if ts.tzinfo is None:
@@ -155,8 +170,8 @@ class DataFetcher:
 
             # pd.Timestamp.value возвращает наносекунды; переводим в миллисекунды
             return int(ts.value // 1_000_000)
-        except Exception:
-            logger.error(f"Неверный формат даты: {date_str}. Ожидается 'YYYY-MM-DD'.")
+        except Exception as e:
+            logger.error(f"Ошибка при разборе даты: {date_str}. {e}")
             raise
     
     # -------------------------------------------------------------
@@ -235,7 +250,11 @@ class DataFetcher:
                 # 5. Обновление 'since' (для следующего шага назад)
                 # Следующая точка "until" будет на 1мс раньше самой первой свечи в этом чанке
                 since_ms = first_timestamp - 1 
-                
+                # Если после обновления since_ms мы дошли до stop_ms — останавливаем пагинацию
+                if since_ms <= stop_ms:
+                    logger.info(f"[{self.symbol}] Достигнут stop_ms ({stop_ms}). Завершение пагинации.")
+                    break
+
                 # Логирование прогресса
                 first_date = datetime.fromtimestamp(first_timestamp / 1000).strftime('%Y-%m-%d %H:%M:%S')
                 logger.info(f"[{self.symbol}] Успешно загружено свечей: {len(valid_chunk)}. Продолжение НАЗАД с: {first_date}")

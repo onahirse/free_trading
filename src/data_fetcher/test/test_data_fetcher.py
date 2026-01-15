@@ -1,6 +1,7 @@
 # tests/test_data_fetcher.py
 import os
 import tempfile
+import shutil
 from unittest.mock import patch, MagicMock
 import pandas as pd
 import pytest
@@ -24,8 +25,12 @@ def mock_exchange():
 
 @pytest.fixture
 def data_fetcher(mock_coin, mock_exchange):
-    with tempfile.TemporaryDirectory() as tmpdir:
-        return DataFetcher(coin=mock_coin, exchange=mock_exchange, directory=tmpdir + os.sep)
+    tmpdir = tempfile.mkdtemp()
+    try:
+        df = DataFetcher(coin=mock_coin, exchange=mock_exchange, directory=tmpdir + os.sep)
+        yield df
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
 
 
 # ===== ИНИЦИАЛИЗАЦИЯ =====
