@@ -9,7 +9,7 @@ import pandas as pd
 import time
 from datetime import datetime
 from typing import Optional, List
-from src.utils.logger import get_logger 
+from src.utils.logger.logger import get_logger 
 # from src.config.config import config
 
 logger = get_logger(__name__)

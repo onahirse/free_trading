@@ -7,7 +7,7 @@ from decimal import Decimal
 # ====================================================
 # Логирование и конфигурация
 # ====================================================
-from src.utils.logger import get_logger
+from src.utils.logger.logger import get_logger
 logger = get_logger(__name__)
 from src.config.config import config
 # ====================================================
@@ -24,7 +24,7 @@ from src.trading_engine.core.signal import Signal
 # ====================================================
 # Risk Manager
 # ====================================================
-from src.risk_manager.risk_manager import RiskManager
+from src.logical.strategy.risk_manager.risk_manager import RiskManager
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Класс стратегии

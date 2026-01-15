@@ -7,14 +7,15 @@ from threading import Lock
 
 # Логирование
 # ====================================================
-from src.utils.logger import get_logger
+from src.utils.logger.logger import get_logger
 logger = get_logger(__name__)
-from src.utils.logger_time import LoggingTimer
+from src.utils.logger.logger_time import LoggingTimer
 from src.config.config import config
 
 # Подключение модуля с загрузчиком данных
 from src.data_fetcher.data_fetcher import DataFetcher
 from src.data_fetcher.utils import select_range_backtest
+import pandas as pd
 
 from src.backtester.reports.collector import SummaryCollector
 from src.backtester.reports.single_test.test_report_generator import TestReportGenerator
@@ -100,12 +101,56 @@ class TestManager:
                 # импортируем здесь чтобы избежать циклических импортов
                 from src.backtester.runner import run_backtest
                 from src.backtester.engine.execution_engine import ExecutionEngine
-                from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import ZigZagAndFibo
                 from src.trading_engine.managers.position_manager import PositionManager
-                from src.logical.hedging.als.als_engine import ALSEngine
+                # загрузка стратегии динамически (path в configs STRATEGY_SETTINGS.PATH)
+                from src.utils.strategy_loader import load_strategy_class, function_to_class_adapter
+                import types
+                import numpy as np
 
-                # инициализация стратегии
-                strategy = ZigZagAndFibo(coin)
+                strategy_path = self.settings_strategy.get("PATH")
+                if not strategy_path:
+                    raise RuntimeError("Strategy path not configured in STRATEGY_SETTINGS.PATH")
+
+                StrategyObj = load_strategy_class(strategy_path)
+                # если функция — оборачиваем в класс-адаптер
+                if not isinstance(StrategyObj, type) and callable(StrategyObj):
+                    StrategyClass = function_to_class_adapter(StrategyObj)
+                else:
+                    StrategyClass = StrategyObj
+
+                # инстанцируем стратегию
+                strategy = StrategyClass(coin)
+
+                # compatibility: если у стратегии нет find_entry_point, но есть run — привяжем адаптер
+                if not hasattr(strategy, 'find_entry_point'):
+                    if hasattr(strategy, 'run'):
+                        def _find_entry(self, data_slice):
+                            # run может ожидать data как np.array или pd.DataFrame
+                            try:
+                                return self.run(data_slice, positions=[], trading_context=None)
+                            except TypeError:
+                                return self.run(data_slice, [])
+
+                        strategy.find_entry_point = types.MethodType(_find_entry, strategy)
+                    else:
+                        raise RuntimeError(f"Loaded strategy {strategy_path} has neither find_entry_point nor run method")
+
+                # Простая валидация стратегии — smoke run на небольшом фрагменте данных
+                try:
+                    # подготовим массив похожий на тот, который используется в BacktestEngine
+                    data_cols = data_htf[['open','high','low','close']].values
+                    timestamps = data_htf.index.values
+                    n = min(len(data_cols), max(1, int(getattr(strategy, 'allowed_min_bars', 1))))
+                    arr_small = np.empty((n, 5), dtype=object)
+                    arr_small[:, :4] = data_cols[:n]
+                    arr_small[:, 4] = pd.to_datetime(timestamps[:n])
+                    # вызов
+                    smoke_sig = strategy.find_entry_point(arr_small)
+                    if smoke_sig is None or not (hasattr(smoke_sig, 'is_no_signal') or hasattr(smoke_sig, 'is_entry')):
+                        raise RuntimeError("Strategy smoke run returned unexpected result")
+                except Exception as e:
+                    logger.exception(f"Strategy validation failed for {strategy_path}: {e}")
+                    raise
                 # инициализация менеджера позиций
                 position_manager = PositionManager()
                 # инициализация движка исполнения

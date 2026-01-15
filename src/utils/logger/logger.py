@@ -94,5 +94,5 @@ log_manager = LoggerManager()
 # Статический метод для простого импорта в других модулях
 get_logger = LoggerManager.get_logger
 
-from src.utils.logger_time import LoggingTimer  as LoggingTimer # Импортируем LoggingTimer для использования в других модулях 
+from .logger_time import LoggingTimer as LoggingTimer  # Импортируем LoggingTimer для использования в других модулях
 

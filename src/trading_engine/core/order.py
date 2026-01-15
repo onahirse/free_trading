@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 
 # Логирование
 # ====================================================
-from src.utils.logger import get_logger
+from src.utils.logger.logger import get_logger
 logger = get_logger(__name__)
 
 from src.trading_engine.core.enums import Direction, OrderType, OrderStatus

@@ -4,7 +4,7 @@
 from decimal import Decimal
 from src.trading_engine.orders.order_factory import make_order
 from src.trading_engine.core.enums import OrderType
-from src.risk_manager.risk_manager import RiskManager
+from src.logical.strategy.risk_manager.risk_manager import RiskManager
 from src.trading_engine.core.signal import Signal
 from src.trading_engine.core.position import Position
 
