@@ -95,3 +95,31 @@ class PositionBuilder:
 
 
         return position
+
+    # ==========================
+    # ? Метод для добавления докупки к существующей позиции
+    # ==========================
+    def add_scale_in_order(self, position: Position, signal: Signal, bar) -> None:
+        """Добавляет ордер докупки к существующей позиции.
+        
+        Args:
+            position: существующая позиция
+            signal: сигнал с информацией о докупке
+            bar: текущий бар
+        """
+        if not signal or not position:
+            raise ValueError("Необходимо указать сигнал и позицию")
+        
+        if signal.price is None:
+            raise ValueError("Цена в сигнале не может быть None")
+        
+        if signal.volume is None:
+            raise ValueError("Объем в сигнале не может быть None")
+        
+        entry_price = position.round_to_tick(signal.price)
+        volume = signal.volume
+        
+        # Добавляем новый ENTRY ордер к позиции
+        position.add_order(
+            make_order(OrderType.ENTRY, entry_price, volume, position.direction, bar[4])
+        )

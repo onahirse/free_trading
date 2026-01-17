@@ -98,12 +98,20 @@ def ensure_find_entry_point(strategy: Any) -> Any:
 
     import types
 
-    def _find_entry(self, data_slice):
+    def _find_entry(self, data_slice, positions=None):
+        """Wrapper для метода run, делающий его совместимым с find_entry_point API.
+        
+        Args:
+            data_slice: данные для анализа
+            positions: список открытых позиций (опционально)
+        """
+        if positions is None:
+            positions = []
         try:
-            return self.run(data_slice, positions=[], trading_context=None)
+            return self.run(data_slice, positions=positions, trading_context=None)
         except TypeError:
             # возможно run ожидает только (data, positions)
-            return self.run(data_slice, [])
+            return self.run(data_slice, positions)
 
     strategy.find_entry_point = types.MethodType(_find_entry, strategy)
     return strategy

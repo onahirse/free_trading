@@ -52,12 +52,27 @@ class SignalHandler:
         return positions
 
     # ============================
-    # ? ENTRY — открытие основной позиции
+    # ? ENTRY — открытие основной позиции или докупка
     # ==================================================
     def _handle_entry(self, signal: Signal, positions: Dict[str, Position], bar):
-
+        # Проверяем, есть ли уже позиция от этой же стратегии
+        existing_position = None
+        for pos in positions.values():
+            if pos.source == signal.source and pos.direction == signal.direction:
+                existing_position = pos
+                break
+        
+        # Если есть существующая позиция того же направления - это докупка
+        if existing_position and signal.metadata.get('entry_type') == 'scale_in':
+            self.logger.info(f"SCALE-IN: докупка к позиции {existing_position.id[:6]}, "
+                           f"scale_count={signal.metadata.get('scale_count', 0)}")
+            
+            # Добавляем новый ENTRY ордер к существующей позиции
+            self.builder.add_scale_in_order(existing_position, signal, bar)
+            return positions
+        
+        # Иначе - открываем новую позицию
         self.logger.info("ENTRY: открытие новой позиции")
-
         position = self.builder.build(signal, bar)
 
         if position:

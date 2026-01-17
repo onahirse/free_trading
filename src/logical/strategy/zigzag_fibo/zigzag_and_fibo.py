@@ -64,13 +64,19 @@ class ZigZagAndFibo:
             return self.find_entry_point(data)
 
     # Ищем точку входа по стратегии
-    def find_entry_point(self, data) -> Signal:
+    def find_entry_point(self, data, positions=None) -> Signal:
         """
         Запуск стратегии ZigZag и уровней Фибоначчи на переданных данных.
         Определяем есть ли сигнал и если есть создаем позицию
         
         :param data: numpy массив формы (N, 5) где последний столбец - timestamps
+        :param positions: список открытых позиций (для совместимости с новым API)
         """
+        # Если переданы позиции, используем их для проверки
+        if positions is not None and len(positions) > 0:
+            logger.debug(f"Есть открытые позиции, стратегия ZigZag и Фибоначчи не будет искать точку входа.")
+            return Signal.no_signal(source=self.source)
+            
         # Оптимизация: создаем DataFrame один раз, но только если нужен для индикаторов
         # Разделяем данные и timestamps
         data_values = data[:, :-1]  # open, high, low, close

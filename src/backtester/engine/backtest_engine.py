@@ -7,6 +7,7 @@ from decimal import Decimal
 # from src.data_fetcher.utils import shift_timestamp
 # from src.logical.hedging.als.als_engine import ALSEngine
 from src.backtester.engine.fast_1m_selector import Fast1mBarSelector
+from src.trading_engine.core.enums import Position_Status
 
 # Engine выполнения бэктеста по барам.
 # Отвечает за обход баров, вызов стратегии, обработку сигналов,
@@ -55,7 +56,11 @@ class BacktestEngine:
 
             # ! запуск стратегии, генерирует сигнал
             # передаем нужное число баров на заданном таймфрейме.
-            signal = self.strategy.find_entry_point(arr[i-self.strategy.allowed_min_bars:i])
+            # Передаем текущие позиции для возможности закрытия
+            signal = self.strategy.find_entry_point(
+                arr[i-self.strategy.allowed_min_bars:i],
+                list(positions.values())  # передаем список позиций
+            )
 
             # ! Обработка сигнала и Создание / обновление позиции ордеров через SignalHandler
             # Сюда можно подовать сигналы из других стратегий и она будет работать
@@ -86,3 +91,16 @@ class BacktestEngine:
             # self.logger.debug(f"Осуществленный PnL на баре {bar_time}: {realized}, Плавающий PnL: {floating}")
             # ! обновление портфеля по бару
             self.portfolio.on_bar(bar_time, realized, floating)
+            
+            # ! Удаление позиций с финальными статусами из активного словаря
+            # Это позволяет стратегии искать новые точки входа
+            closed_statuses = {
+                Position_Status.TAKEN_PART,
+                Position_Status.TAKEN_FULL, 
+                Position_Status.STOPPED,
+                Position_Status.CANCELED
+            }
+            positions = {
+                pos_id: pos for pos_id, pos in positions.items() 
+                if pos.status not in closed_statuses
+            }
